@@ -5,8 +5,15 @@ set -e
 echo "[Railway] Boot sequence started"
 
 if [ -z "$APP_KEY" ]; then
-  echo "[Railway] ERREUR: APP_KEY est vide. Configure APP_KEY dans Railway Variables."
-  exit 1
+  if [ "${RAILWAY_AUTO_GENERATE_APP_KEY:-true}" = "true" ]; then
+    GENERATED_APP_KEY="base64:$(php -r 'echo base64_encode(random_bytes(32));')"
+    export APP_KEY="$GENERATED_APP_KEY"
+    echo "[Railway] APP_KEY absent -> clé temporaire générée pour ce runtime"
+    echo "[Railway] IMPORTANT: définis APP_KEY dans Railway Variables pour une clé persistante"
+  else
+    echo "[Railway] ERREUR: APP_KEY est vide. Configure APP_KEY dans Railway Variables."
+    exit 1
+  fi
 fi
 
 if [ "${RAILWAY_RUN_MIGRATIONS:-true}" = "true" ]; then

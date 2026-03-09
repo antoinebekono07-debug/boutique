@@ -31,6 +31,8 @@ Configurer ces variables dans Railway:
 - `APP_URL=https://<votre-domaine-railway>`
 - `APP_KEY=` (**obligatoire**, générer avec `php artisan key:generate --show` puis coller la valeur)
 
+> Si `APP_KEY` est absent, `railway-start.sh` peut générer une clé runtime temporaire (voir `RAILWAY_AUTO_GENERATE_APP_KEY`). Pour la prod, définis toujours `APP_KEY` en variable Railway.
+
 Base de données MySQL Railway (service DB relié):
 
 - `DB_CONNECTION=mysql`
@@ -52,6 +54,7 @@ Variables de contrôle auto-migration (optionnelles):
 - `RAILWAY_MIGRATION_MAX_RETRIES=10` (défaut)
 - `RAILWAY_MIGRATION_RETRY_DELAY=5` secondes (défaut)
 - `RAILWAY_STORAGE_LINK=true` (défaut)
+- `RAILWAY_AUTO_GENERATE_APP_KEY=true` (défaut)
 
 ### 3) Initialisation après premier déploiement
 
