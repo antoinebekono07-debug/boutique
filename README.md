@@ -115,4 +115,19 @@ Checklist de validation:
    - `APP_DEBUG=false`
 5. Garde `LOG_CHANNEL=stderr` pour une meilleure visibilité des erreurs dans Railway.
 
+### 8) Si `storage:link` échoue avec `symlink(): Aucun fichier ou répertoire de ce type`
+
+Sur un container Railway neuf, il peut arriver que les dossiers nécessaires ne soient pas encore présents au moment du `storage:link`.
+
+Le script `railway-start.sh` gère maintenant ce cas automatiquement:
+
+- création préalable de `storage/app/public` et `public`
+- tentative `php artisan storage:link --no-interaction`
+- fallback symlink manuel si nécessaire
+- skip propre si `public/storage` existe déjà comme dossier normal
+
+Tu peux aussi désactiver ce comportement via:
+
+- `RAILWAY_STORAGE_LINK=false`
+
 

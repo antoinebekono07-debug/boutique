@@ -60,8 +60,22 @@ else
 fi
 
 if [ "${RAILWAY_STORAGE_LINK:-true}" = "true" ]; then
-  echo "[Railway] Création du lien storage"
-  php artisan storage:link || true
+  echo "[Railway] Préparation du lien storage"
+
+  # Évite l'erreur "symlink(): Aucun fichier ou répertoire de ce type"
+  # quand le dossier cible n'existe pas encore dans un container neuf.
+  mkdir -p storage/app/public
+  mkdir -p public
+
+  if [ -e "public/storage" ] && [ ! -L "public/storage" ]; then
+    echo "[Railway] public/storage existe déjà (non-symlink) -> storage:link ignoré"
+  else
+    echo "[Railway] Création du lien storage"
+    php artisan storage:link --no-interaction || {
+      echo "[Railway] storage:link a échoué, tentative de symlink manuel"
+      ln -sfn ../storage/app/public public/storage 2>/dev/null || true
+    }
+  fi
 fi
 
 echo "[Railway] Démarrage serveur PHP sur le port ${PORT:-8080}"
