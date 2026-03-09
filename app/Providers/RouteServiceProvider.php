@@ -40,8 +40,8 @@ class RouteServiceProvider extends ServiceProvider
    */
   public function map()
   {
-    $installationMode = filter_var(env('INSTALLATION_MODE', false), FILTER_VALIDATE_BOOLEAN);
-    $enableUpdateRoutes = filter_var(env('ENABLE_UPDATE_ROUTES', false), FILTER_VALIDATE_BOOLEAN);
+    $installationMode = filter_var(config('app.installation_mode', false), FILTER_VALIDATE_BOOLEAN);
+    $enableUpdateRoutes = filter_var(config('app.enable_update_routes', false), FILTER_VALIDATE_BOOLEAN);
 
     if ($installationMode) {
       $this->mapInstallRoutes();
