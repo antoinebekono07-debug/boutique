@@ -100,4 +100,19 @@ Vérifie ces variables:
 
 Puis redeploy. Le projet chargera alors les routes normales (`web`, `api`, `admin`, etc.) au lieu des routes d'installation uniquement.
 
+### 7) Si tu as encore une erreur 500 sur Railway
+
+Le projet inclut maintenant un fallback pour éviter un crash si la DB n'est pas encore prête au tout début du boot (helpers `get_setting`, `addon_is_activated`, `get_system_default_currency`).
+
+Checklist de validation:
+
+1. Redéploie le dernier commit.
+2. Dans Railway Variables, mets temporairement:
+   - `APP_DEBUG=true`
+   - `LOG_CHANNEL=stderr`
+3. Ouvre les logs runtime Railway et recharge la page.
+4. Si l'app répond normalement, repasse en prod:
+   - `APP_DEBUG=false`
+5. Garde `LOG_CHANNEL=stderr` pour une meilleure visibilité des erreurs dans Railway.
+
 

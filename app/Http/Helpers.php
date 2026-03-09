@@ -191,9 +191,39 @@ if (!function_exists('verified_sellers_id')) {
 if (!function_exists('get_system_default_currency')) {
     function get_system_default_currency()
     {
-        return Cache::remember('system_default_currency', 86400, function () {
-            return Currency::findOrFail(get_setting('system_default_currency'));
-        });
+        static $fallbackCurrency = null;
+
+        if ($fallbackCurrency === null) {
+            $fallbackCurrency = (object) [
+                'id' => null,
+                'code' => env('DEFAULT_CURRENCY_CODE', 'USD'),
+                'symbol' => env('DEFAULT_CURRENCY_SYMBOL', '$'),
+                'exchange_rate' => 1,
+            ];
+        }
+
+        try {
+            return Cache::remember('system_default_currency', 86400, function () use ($fallbackCurrency) {
+                $currencyId = get_setting('system_default_currency');
+
+                if (!empty($currencyId)) {
+                    $currency = Currency::find($currencyId);
+                    if ($currency) {
+                        return $currency;
+                    }
+                }
+
+                return Currency::where('code', env('DEFAULT_CURRENCY_CODE', 'USD'))->first()
+                    ?? Currency::first()
+                    ?? $fallbackCurrency;
+            });
+        } catch (\Throwable $e) {
+            \Log::warning('Unable to resolve system default currency', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return $fallbackCurrency;
+        }
     }
 }
 
@@ -653,7 +683,7 @@ if (!function_exists('home_price')) {
                 $highest_price += $product_tax->tax;
             }
         }
-        
+
         if(addon_is_activated('gst_system')){
             $lowest_price += ($lowest_price * $product->gst_rate) / 100;
             $highest_price += ($highest_price * $product->gst_rate) / 100;
@@ -1406,15 +1436,30 @@ if (!function_exists('isUnique')) {
 if (!function_exists('get_setting')) {
     function get_setting($key, $default = null, $lang = false)
     {
-        $settings = Cache::remember('business_settings', 86400, function () {
-            return BusinessSetting::all();
-        });
+        static $runtimeSettings = null;
+
+        if ($runtimeSettings === null) {
+            try {
+                $runtimeSettings = Cache::remember('business_settings', 86400, function () {
+                    return BusinessSetting::all();
+                });
+            } catch (\Throwable $e) {
+                $runtimeSettings = collect();
+                \Log::warning('Unable to load business settings', [
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        if (!($runtimeSettings instanceof \Illuminate\Support\Collection)) {
+            $runtimeSettings = collect($runtimeSettings);
+        }
 
         if ($lang == false) {
-            $setting = $settings->where('type', $key)->first();
+            $setting = $runtimeSettings->where('type', $key)->first();
         } else {
-            $setting = $settings->where('type', $key)->where('lang', $lang)->first();
-            $setting = !$setting ? $settings->where('type', $key)->first() : $setting;
+            $setting = $runtimeSettings->where('type', $key)->where('lang', $lang)->first();
+            $setting = !$setting ? $runtimeSettings->where('type', $key)->first() : $setting;
         }
         return $setting == null ? $default : $setting->value;
     }
@@ -1518,8 +1563,8 @@ if (!function_exists('checkout_done')) {
             $order->save();
 
             // Order paid notification to Customer, Seller, & Admin
-            EmailUtility::order_email($order, 'paid'); 
-            
+            EmailUtility::order_email($order, 'paid');
+
             try {
                 NotificationUtility::sendOrderPlacedNotification($order);
                 calculateCommissionAffilationClubPoint($order);
@@ -1681,12 +1726,27 @@ if (!function_exists('calculateCommissionAffilationClubPoint')) {
 if (!function_exists('addon_is_activated')) {
     function addon_is_activated($identifier, $default = null)
     {
-        $addons = Cache::remember('addons', 86400, function () {
-            return Addon::all();
-        });
+        static $runtimeAddons = null;
 
-        $activation = $addons->where('unique_identifier', $identifier)->where('activated', 1)->first();
-        return $activation == null ? false : true;
+        if ($runtimeAddons === null) {
+            try {
+                $runtimeAddons = Cache::remember('addons', 86400, function () {
+                    return Addon::all();
+                });
+            } catch (\Throwable $e) {
+                $runtimeAddons = collect();
+                \Log::warning('Unable to load addons', [
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        if (!($runtimeAddons instanceof \Illuminate\Support\Collection)) {
+            $runtimeAddons = collect($runtimeAddons);
+        }
+
+        $activation = $runtimeAddons->where('unique_identifier', $identifier)->where('activated', 1)->first();
+        return $activation == null ? (bool) $default : true;
     }
 }
 
@@ -2992,10 +3052,10 @@ if (!function_exists('timezones')) {
 function formatToArray($input) {
     // Remove extra quotes from the string
     $cleanedString = trim($input, '"');
-    
+
     // Split the string by commas to get each element
     $values = explode(',', $cleanedString);
-    
+
     // Filter out "NaN" and non-numeric values, convert to integers
     $result = array_filter($values, function($value) {
         return is_numeric($value);
@@ -3003,7 +3063,7 @@ function formatToArray($input) {
 
     // Convert numeric values to integers
     $result = array_map('intval', $result);
-    
+
     return $result;
 }
 
@@ -3015,7 +3075,7 @@ if (!function_exists('preorder_product_availability_check')) {
         if($product->is_available){
             return true;
         }
-        $publishDate = Carbon::parse($product->available_date); 
+        $publishDate = Carbon::parse($product->available_date);
         if (Carbon::today()->greaterThanOrEqualTo($publishDate)) {
             return true;
         }
@@ -3029,11 +3089,11 @@ if (!function_exists('preorder_fill_color')) {
     function preorder_fill_color($current_order_status, $previous_order_status = 0)
     {
         $color = match (true) {
-            $current_order_status === 2 => '#28a745', 
-            $current_order_status === 3 => '#dc3545', 
-            $current_order_status === 1 || $previous_order_status == 2 => '#FF6002', 
-            $current_order_status === 0 => '#9d9da6', 
-            default => '#000000', 
+            $current_order_status === 2 => '#28a745',
+            $current_order_status === 3 => '#dc3545',
+            $current_order_status === 1 || $previous_order_status == 2 => '#FF6002',
+            $current_order_status === 0 => '#9d9da6',
+            default => '#000000',
         };
         return $color;
     }
@@ -3187,7 +3247,7 @@ if (!function_exists('preorder_payment_type')) {
     }
 }
 
-// preorder product 
+// preorder product
 if (!function_exists('filter_preorder_product')) {
     function filter_preorder_product($products)
     {
@@ -3218,8 +3278,8 @@ function filter_single_preorder_product($product)
         }
         // Return the product if the user is not a seller (e.g., admin)
         return $product;
-    } 
-    
+    }
+
     // If vendor system is not activated, return the product directly
     return $product;
 }
@@ -3282,7 +3342,7 @@ function youtubeVideoId($url)
 if (!function_exists('get_all_sale_alert_products')) {
     function get_all_sale_alert_products() {
         return CustomSaleAlert::with('product')->get()->map(function($alert) {
-            if (!$alert->product) return null; 
+            if (!$alert->product) return null;
 
             return [
                 'id' => $alert->product->id,
@@ -3379,7 +3439,7 @@ if (!function_exists('gst_applicable_product_rate')) {
 }
 
 
-//fetch gst by price and rate 
+//fetch gst by price and rate
 if (!function_exists('get_gst_by_price_and_rate')) {
     function get_gst_by_price_and_rate($price, $gst_rate)
     {
@@ -3547,7 +3607,7 @@ if (! function_exists('preorder_same_state_shipping')) {
 }
 
 
-//get POS discounted gst 
+//get POS discounted gst
 if (!function_exists('pos_cart_product_gst')) {
     function pos_cart_product_gst($cart_product, $product, $discount, $shipping,  $formatted = true)
     {
@@ -3709,9 +3769,9 @@ if (!function_exists('upload_avatar_from_url')) {
             $upload->type = 'image';
             $upload->external_link = $avatarUrl;
             $upload->save();
-            
+
             return $upload->id;
-            
+
         } catch (\Exception $e) {
             \Log::error('Avatar upload failed: ' . $e->getMessage());
             return null;
