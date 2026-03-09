@@ -53,6 +53,7 @@ Variables de contrôle auto-migration (optionnelles):
 - `RAILWAY_RUN_MIGRATIONS=true` (défaut)
 - `RAILWAY_MIGRATION_MAX_RETRIES=10` (défaut)
 - `RAILWAY_MIGRATION_RETRY_DELAY=5` secondes (défaut)
+- `RAILWAY_FAIL_ON_MIGRATION_ERROR=false` (défaut, laisse l'app démarrer même si migration KO)
 - `RAILWAY_STORAGE_LINK=true` (défaut)
 - `RAILWAY_AUTO_GENERATE_APP_KEY=true` (défaut)
 
@@ -82,5 +83,16 @@ Si Railway tente encore un build Docker/Node, vérifie dans **Settings > Build**
 1. Builder = **Nixpacks** (pas Dockerfile)
 2. Redéploie le dernier commit contenant `nixpacks.toml`
 3. Optionnel: Clear build cache puis redeploy
+
+### 6) Si Railway affiche "Application failed to respond"
+
+Vérifie en priorité:
+
+1. `APP_URL` pointe bien vers le domaine Railway (https)
+2. Les variables DB `${{MySQL.*}}` sont bien liées
+3. `APP_KEY` est défini (ou laisser `RAILWAY_AUTO_GENERATE_APP_KEY=true` temporairement)
+4. Pour diagnostiquer rapidement, tu peux mettre:
+   - `RAILWAY_RUN_MIGRATIONS=false` (pour démarrer sans migration)
+   - puis relancer les migrations manuellement ensuite
 
 
