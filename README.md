@@ -57,6 +57,11 @@ Variables de contrôle auto-migration (optionnelles):
 - `RAILWAY_STORAGE_LINK=true` (défaut)
 - `RAILWAY_AUTO_GENERATE_APP_KEY=true` (défaut)
 
+Variables de mode routes (installation/update):
+
+- `INSTALLATION_MODE=false` (défaut: mode application normal)
+- `ENABLE_UPDATE_ROUTES=false` (défaut: routes update désactivées)
+
 ### 3) Initialisation après premier déploiement
 
 Les migrations sont exécutées automatiquement au démarrage via `railway-start.sh`.
@@ -84,15 +89,15 @@ Si Railway tente encore un build Docker/Node, vérifie dans **Settings > Build**
 2. Redéploie le dernier commit contenant `nixpacks.toml`
 3. Optionnel: Clear build cache puis redeploy
 
-### 6) Si Railway affiche "Application failed to respond"
+### 6) Si tu tombes sur "CHECKING FILE PERMISSIONS" (installateur)
 
-Vérifie en priorité:
+Sur Railway en production, tu ne dois pas rester sur l'installateur.
 
-1. `APP_URL` pointe bien vers le domaine Railway (https)
-2. Les variables DB `${{MySQL.*}}` sont bien liées
-3. `APP_KEY` est défini (ou laisser `RAILWAY_AUTO_GENERATE_APP_KEY=true` temporairement)
-4. Pour diagnostiquer rapidement, tu peux mettre:
-   - `RAILWAY_RUN_MIGRATIONS=false` (pour démarrer sans migration)
-   - puis relancer les migrations manuellement ensuite
+Vérifie ces variables:
+
+- `INSTALLATION_MODE=false`
+- `ENABLE_UPDATE_ROUTES=false`
+
+Puis redeploy. Le projet chargera alors les routes normales (`web`, `api`, `admin`, etc.) au lieu des routes d'installation uniquement.
 
 

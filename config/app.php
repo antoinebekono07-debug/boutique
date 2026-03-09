@@ -132,6 +132,10 @@ return [
 
     'system_key' => env('SYSTEM_KEY'),
 
+    // Railway / deployment toggles
+    'installation_mode' => env('INSTALLATION_MODE', false),
+    'enable_update_routes' => env('ENABLE_UPDATE_ROUTES', false),
+
     /*
     |--------------------------------------------------------------------------
     | Autoloaded Service Providers
@@ -171,7 +175,7 @@ return [
         Illuminate\Validation\ValidationServiceProvider::class,
         Illuminate\View\ViewServiceProvider::class,
         KingFlamez\Rave\RaveServiceProvider::class,
-        
+
         /*
          * Package Service Providers...
          */

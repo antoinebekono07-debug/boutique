@@ -40,61 +40,76 @@ class RouteServiceProvider extends ServiceProvider
    */
   public function map()
   {
-    //$this->mapApiRoutes();
+    $installationMode = filter_var(env('INSTALLATION_MODE', false), FILTER_VALIDATE_BOOLEAN);
+    $enableUpdateRoutes = filter_var(env('ENABLE_UPDATE_ROUTES', false), FILTER_VALIDATE_BOOLEAN);
 
-    //$this->mapApiSellerRoutes();
+    if ($installationMode) {
+      $this->mapInstallRoutes();
 
-    //$this->mapAdminRoutes();
+      if ($enableUpdateRoutes) {
+        $this->mapUpdateRoutes();
+      }
 
-    //$this->mapSellerRoutes();
+      return;
+    }
 
-    //$this->mapAffiliateRoutes();
+    $this->mapApiRoutes();
 
-    //$this->mapRefundRoutes();
+    $this->mapApiSellerRoutes();
 
-    //$this->mapClubPointsRoutes();
+    $this->mapAdminRoutes();
 
-    //$this->mapOtpRoutes();
+    $this->mapSellerRoutes();
 
-    //$this->mapOfflinePaymentRoutes();
+    $this->mapAffiliateRoutes();
 
-    //$this->mapAfricanPaymentGatewayRoutes();
+    $this->mapRefundRoutes();
 
-    //$this->mapPaytmRoutes();
+    $this->mapClubPointsRoutes();
 
-    //$this->mapPosRoutes();
+    $this->mapOtpRoutes();
 
-    //$this->mapSellerPackageRoutes();
+    $this->mapOfflinePaymentRoutes();
 
-    //$this->mapDeliveryBoyRoutes();
+    $this->mapAfricanPaymentGatewayRoutes();
 
-    //$this->mapAuctionRoutes();
+    $this->mapPaytmRoutes();
 
-    //$this->mapWholesaleRoutes();
+    $this->mapPosRoutes();
 
-    //$this->mapPreorderRoutes();
+    $this->mapSellerPackageRoutes();
 
-    //$this->mapCybersourceRoutes();
+    $this->mapDeliveryBoyRoutes();
 
-    //$this->mapGstRoutes();
+    $this->mapAuctionRoutes();
 
-    //$this->mapShiprocketRoutes();
+    $this->mapWholesaleRoutes();
 
-    //$this->mapSteadfastRoutes();
+    $this->mapPreorderRoutes();
 
-    //$this->mapPathaoRoutes();
+    $this->mapCybersourceRoutes();
 
-    //$this->mapKnetRoutes();
+    $this->mapGstRoutes();
 
-    //$this->mapUddoktapayRoutes();
+    $this->mapShiprocketRoutes();
 
-    //$this->mapRedxRoutes();
+    $this->mapSteadfastRoutes();
 
-    //$this->mapWebRoutes();
+    $this->mapPathaoRoutes();
 
-    $this->mapInstallRoutes();
+    $this->mapKnetRoutes();
 
-    //$this->mapUpdateRoutes();
+    $this->mapUddoktapayRoutes();
+
+    $this->mapRedxRoutes();
+
+    $this->mapWebRoutes();
+
+    // $this->mapInstallRoutes();
+
+    if ($enableUpdateRoutes) {
+      $this->mapUpdateRoutes();
+    }
   }
 
   /**
