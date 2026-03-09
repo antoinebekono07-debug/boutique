@@ -4,12 +4,18 @@ A complete solution for E-commerce Business with exclusive features & super resp
 
 Ce projet est maintenant prêt pour Railway avec un fichier `railway.json`.
 
+> ✅ Correctif build Railway : un fichier `nixpacks.toml` est ajouté pour forcer un build **PHP uniquement** (évite l'étape `npm i` et l'erreur `node-sass`).
+
 ### 1) Configuration déjà ajoutée au repo
 
 - `railway.json`
   - Build: `composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction`
   - Start: `sh railway-start.sh`
 - `server.php` adapté pour ce projet (front controller à la racine via `index.php`)
+- `nixpacks.toml`
+  - Force `providers = ["php"]`
+  - Empêche l'auto-détection Node/NPM par Nixpacks
+  - Build uniquement via Composer
 - `railway-start.sh`
   - Vérifie `APP_KEY`
   - Lance les migrations automatiquement (avec retry)
@@ -65,5 +71,13 @@ Si votre projet dépend du dump SQL fourni (`shop.sql`), importez-le dans la bas
 - Le stockage local Railway est éphémère. Pour les uploads persistants, configurez S3 (variables AWS dans `.env.example`).
 - Vérifiez les permissions d'écriture sur `storage/` et `bootstrap/cache/` (Railway/Nixpacks les gère en général correctement).
 - En environnement avec plusieurs instances, éviter de lancer les migrations sur toutes les instances en parallèle (désactiver `RAILWAY_RUN_MIGRATIONS` sur les réplicas si nécessaire).
+
+### 5) En cas d'erreur `npm i` / `node-sass` sur Railway
+
+Si Railway tente encore un build Docker/Node, vérifie dans **Settings > Build** du service :
+
+1. Builder = **Nixpacks** (pas Dockerfile)
+2. Redéploie le dernier commit contenant `nixpacks.toml`
+3. Optionnel: Clear build cache puis redeploy
 
 

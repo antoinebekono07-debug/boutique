@@ -1,0 +1,7 @@
+providers = ["php"]
+
+[phases.install]
+cmds = ["composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction"]
+
+[start]
+cmd = "sh railway-start.sh"
